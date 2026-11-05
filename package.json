@@ -1,0 +1,75 @@
+{
+  "name": "n8n-nodes-emissaoja",
+  "version": "0.1.0",
+  "description": "Emitir NFS-e no n8n pelo Emissor Nacional, sem certificado digital, para MEI e Simples Nacional: tomadores, notas, PDF e XML. Brazilian NFS-e (service invoice) node for n8n.",
+  "license": "MIT",
+  "homepage": "https://emissaoja.com.br",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "n8n-nodes",
+    "emissaoja",
+    "nfse",
+    "nfs-e",
+    "nfse nacional",
+    "nota fiscal de serviço",
+    "nota fiscal eletrônica",
+    "emissor nacional",
+    "api nfse",
+    "emitir nfse",
+    "nfse sem certificado digital",
+    "mei",
+    "simples nacional",
+    "danfse",
+    "brasil",
+    "brazil",
+    "invoice",
+    "service invoice"
+  ],
+  "author": {
+    "name": "BINOBO LTDA",
+    "email": "suporte@emissaoja.com.br",
+    "url": "https://emissaoja.com.br"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Easymovel/n8n-nodes-emissaoja.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Easymovel/n8n-nodes-emissaoja/issues"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "build:watch": "tsc --watch",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "release": "n8n-node release",
+    "prepublishOnly": "n8n-node prerelease",
+    "test": "node --test test/execute.test.mjs"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
+    "credentials": [
+      "dist/credentials/EmissaojaApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Emissaoja/Emissaoja.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "^0.55.5",
+    "eslint": "9.39.4",
+    "prettier": "3.8.3",
+    "release-it": "20.2.0",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

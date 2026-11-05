@@ -1,0 +1,33 @@
+{
+	"node": "n8n-nodes-emissaoja.emissaoja",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": [
+		"Finance & Accounting"
+	],
+	"alias": [
+		"NFS-e",
+		"NFSe",
+		"nota fiscal",
+		"nota fiscal de serviço",
+		"Emissor Nacional",
+		"DANFSe",
+		"MEI",
+		"Simples Nacional",
+		"tomador",
+		"invoice",
+		"Brazil"
+	],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/Easymovel/n8n-nodes-emissaoja#credencial"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/Easymovel/n8n-nodes-emissaoja#readme"
+			}
+		]
+	}
+}

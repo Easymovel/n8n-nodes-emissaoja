@@ -1,0 +1,80 @@
+# Publica o pacote no npm quando uma tag v* (por exemplo v0.1.0) é enviada.
+#
+# O n8n exige que community nodes verificados sejam publicados por GitHub Actions com
+# provenance (obrigatório desde 1º de maio de 2026). Este workflow publica com
+# `npm publish --provenance --access public`.
+#
+# Configuração (uma vez):
+#   A) Trusted publishing (recomendado, sem segredo): em npmjs.com > pacote n8n-nodes-emissaoja >
+#      Settings > Trusted Publisher > GitHub Actions: owner "Easymovel", repositório
+#      "n8n-nodes-emissaoja", workflow "publish.yml", environment em branco.
+#   B) Alternativa / primeira publicação (o trusted publisher só pode ser configurado depois que o
+#      pacote existe no npm): crie um Granular Access Token com permissão de publicação e salve como
+#      secret NPM_TOKEN no repositório. Com trusted publishing configurado, apague o secret.
+#
+# Para publicar: atualize "version" no package.json (e VERSION em nodes/Emissaoja/shared/transport.ts),
+# registre a versão no CHANGELOG.md, faça commit e envie a tag:  git tag v0.1.0 && git push origin v0.1.0
+
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Necessário para o token OIDC (trusted publishing e provenance).
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      # Trusted publishing exige npm >= 11.5.1.
+      - name: Update npm
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Check tag matches package.json and User-Agent version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "A tag $GITHUB_REF_NAME não confere com a versão $VERSION do package.json"; exit 1
+          fi
+          grep -q "VERSION = '$VERSION'" nodes/Emissaoja/shared/transport.ts || {
+            echo "Atualize VERSION em nodes/Emissaoja/shared/transport.ts para $VERSION"; exit 1; }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Publish
+        # RELEASE_MODE libera o "prepublishOnly" (n8n-node prerelease), que bloqueia publicação fora do fluxo de release.
+        run: npm publish --provenance --access public
+        env:
+          RELEASE_MODE: 'true'
+          # Só é usado se o trusted publishing não estiver configurado (opção B acima).
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

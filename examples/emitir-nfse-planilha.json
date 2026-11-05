@@ -1,0 +1,216 @@
+{
+  "name": "Emitir NFS-e a partir de uma planilha (emissaoja)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Emitir NFS-e a partir de uma planilha\n\nUma NFS-e por linha da planilha, no Emissor Nacional, sem certificado digital.\n\n1. **Planilha**: escolha a sua planilha do Google com as colunas `documento` (CNPJ ou CPF do cliente), `valor` (ex.: 1500.00) e `descricao`. Para cliente com CPF, inclua também a coluna `nome`.\n2. Nos nodes do emissaoja, escolha a sua credencial **Emissaoja API**. Comece pelo ambiente **Sandbox** (chave `ej_test_`): nada vai ao fisco. Empresa de exemplo do sandbox: CNPJ 11111111000191; cliente de exemplo: 12345678000195.\n3. Clique em **Execute workflow**.\n\nConta e chave de API: https://emissaoja.com.br/?origem=lib-n8n",
+        "height": 380,
+        "width": 660,
+        "color": 4
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a01",
+      "name": "Como usar",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Referência (Idempotency-Key)\n`nfse-{{ $execution.id }}-{{ $itemIndex }}` é única por linha e por execução. Se o node rodar de novo na mesma execução (Retry On Fail), a API devolve o mesmo pedido em vez de emitir outra nota.\n\nNota igual (mesmo cliente, valor e data) no mesmo dia volta `possivel_duplicada`: o item para e nada é emitido.",
+        "height": 260,
+        "width": 420,
+        "color": 6
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a02",
+      "name": "Nota sobre a referência",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Resultado\n**Aguardar autorização** consulta o pedido até `autorizada`, `recusada` ou `incerta`, no ritmo que a API pede.\n\nSó nota `autorizada` tem PDF. Para tratar os outros casos, ligue um **If** em `{{ $json.pedido.estado }}` antes de **Baixar PDF**.\n\nO PDF sai no campo binário `data` (nfse-NÚMERO.pdf), pronto para um node de e-mail ou de armazenamento.",
+        "height": 260,
+        "width": 440,
+        "color": 7
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a03",
+      "name": "Nota sobre o resultado",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        180
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a04",
+      "name": "Executar",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a05",
+      "name": "Planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "customer",
+        "operation": "create",
+        "document": "={{ $json.documento }}",
+        "name": "={{ $json.nome ?? '' }}"
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a06",
+      "name": "Criar tomador",
+      "type": "n8n-nodes-emissaoja.emissaoja",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "invoice",
+        "operation": "issue",
+        "reference": "=nfse-{{ $execution.id }}-{{ $itemIndex }}",
+        "customerType": "={{ $json.tomador.tipo }}",
+        "customerId": "={{ $json.tomador.id }}",
+        "amount": "={{ $('Planilha').item.json.valor }}",
+        "description": "={{ $('Planilha').item.json.descricao }}"
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a07",
+      "name": "Emitir NFS-e",
+      "type": "n8n-nodes-emissaoja.emissaoja",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "invoice",
+        "operation": "waitForAuthorization",
+        "issuanceId": "={{ $json.pedido.id }}",
+        "maxWait": 120
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a08",
+      "name": "Aguardar autorização",
+      "type": "n8n-nodes-emissaoja.emissaoja",
+      "typeVersion": 1,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "invoice",
+        "operation": "downloadPdf",
+        "origin": "={{ $json.pedido.nota?.origem }}",
+        "invoiceId": "={{ $json.pedido.nota?.id }}",
+        "invoiceNumber": "={{ $json.pedido.numero }}"
+      },
+      "id": "7d3f6a10-2b6e-4c8e-9f55-5a1e0e0b9a09",
+      "name": "Baixar PDF",
+      "type": "n8n-nodes-emissaoja.emissaoja",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Executar": {
+      "main": [
+        [
+          {
+            "node": "Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planilha": {
+      "main": [
+        [
+          {
+            "node": "Criar tomador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar tomador": {
+      "main": [
+        [
+          {
+            "node": "Emitir NFS-e",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emitir NFS-e": {
+      "main": [
+        [
+          {
+            "node": "Aguardar autorização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar autorização": {
+      "main": [
+        [
+          {
+            "node": "Baixar PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
