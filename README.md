@@ -77,8 +77,9 @@ ou páginas no navegador.
    `nfse-<número>.pdf`.
 
 No sandbox alguns valores têm significado: `13.13` termina `incerta` (ao conferir, vira autorizada), `77.77` termina
-`incerta` que não saiu e `99.99` termina `recusada`. Tomadores de exemplo: CNPJ `12345678000195` e CPF `52998224725`.
-O sandbox é reiniciado a cada publicação do emissaoja: a empresa continua conectada, mas as notas emitidas somem.
+`incerta` que não saiu, `66.66` termina `recusada` e `99.99` para num bloqueio já na prévia (`nota_bloqueada`).
+Tomadores de exemplo: CNPJ `12345678000195` e CPF `52998224725`. A empresa conectada e as notas do sandbox continuam lá
+quando o emissaoja publica uma versão nova.
 
 ## Em produção
 
